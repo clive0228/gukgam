@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>국회</title>
+    </head>
+    <body>
+        <table>
+            <tr>
+                <td>의안번호</td>
+                <td>의안명</td>
+                <td>의안주소</td>
+            </tr>
+            {% for bill in bills %}
+            <tr>
+                <td>{{ bill.billNum}}</td>
+                <td>{{ bill.billName}}</td>
+                <td>{{ bill.billUrl}}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </body>
+</html>
