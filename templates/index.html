@@ -14,7 +14,7 @@
             <tr>
                 <td>{{ bill.billNum}}</td>
                 <td>{{ bill.billName}}</td>
-                <td>{{ bill.billUrl}}</td>
+                <td><a href="{{ bill.billUrl }}">{{ bill.billUrl}}</a></td>
             </tr>
             {% endfor %}
         </table>
