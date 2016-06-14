@@ -1,9 +1,10 @@
 from django.shortcuts import render
-from collector.models import billInfo
 from django.template.response import TemplateResponse
+from collector.models import billInfo, billAcceptInfo
 
 import bs4
 import requests
+import datetime
 
 def list_collector(request):
 
@@ -53,21 +54,44 @@ def bill_detail(info):
 
     process = data.find("span", attrs={"class": "on"}).text
 
-    cotents = data.findAll("div", attrs={"class": "contIn"})
+    contents = data.findAll("div", attrs={"class": "contIn"})
 
     # contIn div 아래 subti h5가 분류 결정
     # contIn div 안에 테이블에서 데이터 추출
     billnum = ""
     for cont in contents:
-        type = cont.find("h5", attrs={"class": "subti01"}).text
+        type = cont.find("h5", attrs={"class": "subti02"}).text
+        type = type.replace("▶ ", "")
 
-        if type == "의안접수정보":
-            tbody = cont.find("tbody")
-            tr = cont.find("tr")
-            tds = tr.find("td")
-            billnum = td[0].text
-            billProposeDate = td[1].text
-            billProposer = td[2].text
+        div = cont.find("div", attrs={"class": "tableCol01"})
+        tbody = div.find("tbody")
+        tr = tbody.find("tr")
+        tds = tr.findAll("td")
+
+        if type == "의안접수정보":            
+            billnum = tds[0].text
+            billProposeDate = tds[1].text
+            billProposeDate = datetime.datetime.strptime(billProposeDate, "%Y-%m-%d")
+            billProposer = tds[2].text.strip()
+
+            billAcceptInfo.objects.create(
+                bill=billInfo.objects.get(billNum=billnum),
+                process=process,
+                proposeDate=billProposeDate,
+                proposer=billProposer
+            )
+        elif type == "소관위 심사정보":
+            committee = tds[0].text.split()
+            sendingDate = tds[1].text
+            introDate = tds[2].text
+            disposeDate = tds[3].text
+            disposeResult = tds[4].text.split()
+
+            print(committee)
+            print(sendingDate)
+            print(introDate)
+            print(disposeResult)
+            print(disposeDate)
 
 
 

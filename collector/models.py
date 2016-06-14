@@ -8,3 +8,11 @@ class billInfo(models.Model):
 
 class billAcceptInfo(models.Model):
     bill = models.ForeignKey(billInfo)
+    process = models.CharField(max_length=100, default=None)
+    proposeDate = models.DateField(auto_now_add=True)
+    proposer = models.CharField(max_length=100, default=None)
+
+class workers(models.Model):
+    name = models.CharField(max_length=100, default=None)
+    party = models.CharField(max_length=100, default="무소속")
+    # 새누리당 김성태 두명 / 새누리당, 국민의당 최경환 /  
