@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.template.response import TemplateResponse
 from collector.models import (
     billInfo, billAcceptInfo, JurisJudgeInfo, JurisConfInfo, LegisJudgeInfo,
-    LegisConfInfo
+    LegisConfInfo, MainConfInfo, TransferInfo, ProclaimInfo, RelJudgeInfo
 )
 
 import bs4
@@ -109,7 +109,7 @@ def bill_detail(info):
                 disposeResult=disposeResult
             )
 
-            if titles[1]:
+            if titles[1].text.replace("▶ ", "") == "소관위 회의정보":
                 table = cont.find("table", attrs={"summary": "소관위 회의정보"})
                 tbody = table.find("tbody")
                 tr = tbody.find("tr")
@@ -128,7 +128,7 @@ def bill_detail(info):
                     confDate=confDate,
                     confResult=confResult
                 )
-            if titles[2]:
+            if titles[2].text.replace("▶ ", "") == "법사위 체계자구심사정보":
                 table = cont.find("table", attrs={"summary": "법사위 체계자구심사정보"})
                 tbody = table.find("tbody")
                 tr = tbody.find("tr")
@@ -153,7 +153,27 @@ def bill_detail(info):
                     disposeDate=disposeDate,
                     disposeResult=disposeResult
                 )
-            if titles[3]:
+            elif titles[2].text.replace("▶ ", "") == "관련위 심사정보":
+                table = cont.find("table", attrs={"summary": "관련위 심사정보"})
+                tbody = table.find("tbody")
+                trs = tbody.findAll("tr")
+
+                for tr in trs:
+                    tds = tr.findAll("td")
+                    relName = tds[0].text.strip()
+                    sendingDate = tds[1].text.strip()
+                    introDate = tds[2].text.strip()
+                    proposeDate = tds[3].text.strip()
+
+                    RelJudgeInfo.objects.create(
+                        bill=billInfo.objects.get(billNum=billnum),
+                        relName=relName,
+                        sendingDate=sendingDate,
+                        introDate=introDate,
+                        proposeDate=proposeDate
+                    )
+
+            if titles[3].text.replace("▶ ", "") == "법사위 회의정보":
                 table = cont.find("table", attrs={"summary": "법사위 회의정보"})
                 tbody = table.find("tbody")
                 tr = tbody.find("tr")
@@ -172,6 +192,57 @@ def bill_detail(info):
                     confDate=confDate,
                     confResult=confResult
                 )
+        elif type == "본회의 심의정보":
+            introDate = tds[0].text.strip()
+            decisionDate = tds[1].text.strip()
+            confName = tds[2].text.strip()
+            confResult = tds[3].text.strip()
+
+            if introDate == "":
+                introDate = "1900-01-01"
+            if decisionDate == "":
+                decisionDate = "1900-01-01"
+
+            MainConfInfo.objects.create(
+                bill=billInfo.objects.get(billNum=billnum),
+                introDate=introDate,
+                decisionDate=decisionDate,
+                confName=confName,
+                confResult=confResult
+            )
+        elif type == "정부이송정보":
+            transferDate = tds[0].text.strip()
+            if transferDate == "":
+                transferDate = '1900-01-01'
+
+            t = TransferInfo.objects.create(
+                bill=billInfo.objects.get(billNum=billnum),
+                transferDate=transferDate
+            )
+        elif type == "공포정보":
+            proclaimDate = tds[0].text.strip()
+            proclaimNum = tds[1].text.strip()
+            proclaimLaw = tds[2].text.strip()
+
+            if proclaimDate == "":
+                proclaimDate = "1900-01-01"
+
+            p = ProclaimInfo.objects.create(
+                bill=billInfo.objects.get(billNum=billnum),
+                proclaimDate=proclaimDate,
+                proclaimNum=proclaimNum,
+                proclaimLaw=proclaimLaw
+            )
+        elif  "대안반영폐기 의안목록" in type:
+            pass
+        elif type == "비고":
+            pass
+
+            
+            
+
+
+
 
         
 

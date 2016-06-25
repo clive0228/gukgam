@@ -26,6 +26,13 @@ class JurisConfInfo(models.Model):
     confDate = models.DateField(default='1900-01-01')
     confResult = models.CharField(max_length=300, default=None)
 
+class RelJudgeInfo(models.Model):
+    bill = models.ForeignKey(billInfo)
+    relName = models.CharField(max_length=100, default=None)
+    sendingDate = models.DateField(default="1900-01-01")
+    introDate = models.DateField(default="1900-01-01")
+    proposeDate = models.DateField(default="1900-01-01")
+
 class LegisJudgeInfo(models.Model):
     bill = models.ForeignKey(billInfo)
     sendingDate = models.DateField(default='1900-01-01')
@@ -38,6 +45,23 @@ class LegisConfInfo(models.Model):
     confName = models.CharField(max_length=300, default=None)
     confDate = models.DateField(default="1900-01-01")
     confResult = models.CharField(max_length=300, default=None)
+
+class MainConfInfo(models.Model):
+    bill = models.ForeignKey(billInfo)
+    introDate = models.DateField(default="1900-01-01")
+    decisionDate = models.DateField(default="1900-01-01")
+    confName = models.CharField(max_length=300, default=None)
+    confResult = models.CharField(max_length=300, default=None)
+
+class TransferInfo(models.Model):
+    bill = models.ForeignKey(billInfo)
+    transferDate = models.DateField(default="1900-01-01")
+
+class ProclaimInfo(models.Model):
+    bill = models.ForeignKey(billInfo)
+    proclaimDate = models.DateField(default="1900-01-01")
+    proclaimNum = models.CharField(max_length=20, default=None)
+    proclaimLaw = models.CharField(max_length=300, default=None)
 
 class workers(models.Model):
     name = models.CharField(max_length=100, default=None)
