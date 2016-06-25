@@ -1,6 +1,9 @@
 from django.shortcuts import render
 from django.template.response import TemplateResponse
-from collector.models import billInfo, billAcceptInfo
+from collector.models import (
+    billInfo, billAcceptInfo, JurisJudgeInfo, JurisConfInfo, LegisJudgeInfo,
+    LegisConfInfo
+)
 
 import bs4
 import requests
@@ -60,18 +63,21 @@ def bill_detail(info):
     # contIn div 안에 테이블에서 데이터 추출
     billnum = ""
     for cont in contents:
-        type = cont.find("h5", attrs={"class": "subti02"}).text
-        type = type.replace("▶ ", "")
-
-        div = cont.find("div", attrs={"class": "tableCol01"})
-        tbody = div.find("tbody")
-        tr = tbody.find("tr")
-        tds = tr.findAll("td")
+        titles = cont.findAll("h5", attrs={"class": "subti02"})
+        type = titles[0].text.replace("▶ ", "")
+        
+        try:
+            div = cont.find("div", attrs={"class": "tableCol01"})
+            tbody = div.find("tbody")
+            tr = tbody.find("tr")
+            tds = tr.findAll("td")
+        except:
+            continue
 
         if type == "의안접수정보":            
             billnum = tds[0].text
-            billProposeDate = tds[1].text
-            billProposeDate = datetime.datetime.strptime(billProposeDate, "%Y-%m-%d")
+            billProposeDate = tds[1].text.strip()
+            # billProposeDate = datetime.datetime.strptime(billProposeDate, "%Y-%m-%d")
             billProposer = tds[2].text.strip()
 
             billAcceptInfo.objects.create(
@@ -81,19 +87,93 @@ def bill_detail(info):
                 proposer=billProposer
             )
         elif type == "소관위 심사정보":
-            committee = tds[0].text.split()
-            sendingDate = tds[1].text
-            introDate = tds[2].text
-            disposeDate = tds[3].text
-            disposeResult = tds[4].text.split()
+            committee = tds[0].text.strip()
+            sendingDate = tds[1].text.strip()
+            introDate = tds[2].text.strip()
+            disposeDate = tds[3].text.strip()
+            disposeResult = tds[4].text.strip()
 
-            print(committee)
-            print(sendingDate)
-            print(introDate)
-            print(disposeResult)
-            print(disposeDate)
+            if sendingDate == '':
+                sendingDate = '1900-01-01'
+            if introDate == '':
+                introDate = '1900-01-01'
+            if disposeDate == '':
+                disposeDate = '1900-01-01'
 
+            JurisJudgeInfo.objects.create(
+                bill=billInfo.objects.get(billNum=billnum),
+                committee=committee,
+                sendingDate=sendingDate,
+                introDate=introDate,
+                disposeDate=disposeDate,
+                disposeResult=disposeResult
+            )
 
+            if titles[1]:
+                table = cont.find("table", attrs={"summary": "소관위 회의정보"})
+                tbody = table.find("tbody")
+                tr = tbody.find("tr")
+                tds = tr.findAll("td")
+
+                confName = tds[0].text.strip()
+                confDate = tds[1].text.strip()
+                confResult = tds[2].text.strip()
+
+                if confDate == '':
+                    confDate = '1900-01-01'
+
+                JurisConfInfo.objects.create(
+                    bill=billInfo.objects.get(billNum=billnum),
+                    confName=confName,
+                    confDate=confDate,
+                    confResult=confResult
+                )
+            if titles[2]:
+                table = cont.find("table", attrs={"summary": "법사위 체계자구심사정보"})
+                tbody = table.find("tbody")
+                tr = tbody.find("tr")
+                tds = tr.findAll("td")
+
+                sendingDate = tds[0].text.strip()
+                introDate = tds[1].text.strip()
+                disposeDate = tds[2].text.strip()
+                disposeResult = tds[3].text.strip()
+
+                if sendingDate == '':
+                    sendingDate = '1900-01-01'
+                if introDate == '':
+                    introDate = '1900-01-01'
+                if disposeDate == '':
+                    disposeDate = '1900-01-01'
+
+                LegisJudgeInfo.objects.create(
+                    bill=billInfo.objects.get(billNum=billnum),
+                    sendingDate=sendingDate,
+                    introDate=introDate,
+                    disposeDate=disposeDate,
+                    disposeResult=disposeResult
+                )
+            if titles[3]:
+                table = cont.find("table", attrs={"summary": "법사위 회의정보"})
+                tbody = table.find("tbody")
+                tr = tbody.find("tr")
+                tds = tr.findAll("td")
+
+                confName = tds[0].text.strip()
+                confDate = tds[1].text.strip()
+                confResult = tds[2].text.strip()
+
+                if confDate == '':
+                    confDate = '1900-01-01'
+
+                LegisConfInfo.objects.create(
+                    bill=billInfo.objects.get(billNum=billnum),
+                    confName=confName,
+                    confDate=confDate,
+                    confResult=confResult
+                )
+
+        
 
 
 
