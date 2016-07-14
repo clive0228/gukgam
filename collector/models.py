@@ -63,6 +63,12 @@ class ProclaimInfo(models.Model):
     proclaimNum = models.CharField(max_length=20, default=None)
     proclaimLaw = models.CharField(max_length=300, default=None)
 
+class AdditionalInfo(models.Model):
+    bill = models.ForeignKey(billInfo)
+    content = models.CharField(max_length=300, default=None)
+    type = models.SmallIntegerField(default=0)
+    # 1 -> alternative bills, 2 -> notes, 3 -> another laws
+
 class workers(models.Model):
     name = models.CharField(max_length=100, default=None)
     party = models.CharField(max_length=100, default="무소속")
