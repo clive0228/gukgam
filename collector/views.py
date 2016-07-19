@@ -4,6 +4,7 @@ from collector.models import (
     billInfo, billAcceptInfo, JurisJudgeInfo, JurisConfInfo, LegisJudgeInfo,
     LegisConfInfo, MainConfInfo, TransferInfo, ProclaimInfo, RelJudgeInfo, AdditionalInfo
 )
+from concurrent.futures import ThreadPoolExecutor
 
 import bs4
 import requests
@@ -13,7 +14,97 @@ def list_collector(request):
     # bill_url_collector(19, 19, 100, 190)
 
     bills = billInfo.objects.all()
+    # SCREEN_CODE = "\033[1A[\033[2K"
+    # with ThreadPoolExecutor(max_workers=10) as executor:
+        # for bill in bills:
+            # rate = str((billAcceptInfo.objects.count() / 18926) * 100)
+            # print("Complete " + rate + "%")
+            # executor.submit(bill_detail, bill)
+
+    # print("done")
+    # bai = billAcceptInfo.objects.all()
+    # for ba in bai:
+    #     print(ba.process)
+    #     print(ba.proposeDate)
+    #     print(ba.proposer)
+    # return
+    print(billInfo.objects.count())
+    print(billAcceptInfo.objects.count())
+    print(JurisJudgeInfo.objects.count())
+    print(JurisConfInfo.objects.count())
+    print(LegisJudgeInfo.objects.count())
+    print(LegisConfInfo.objects.count())
+    print(MainConfInfo.objects.count())
+    print(TransferInfo.objects.count())
+    print(ProclaimInfo.objects.count())
+    print(RelJudgeInfo.objects.count())
+    print(AdditionalInfo.objects.count())
+
+    # return
     context = {'bills': bills}
+
+    with open("19th.txt", "w") as f:
+        for bill in bills:
+            print(bill.billName)
+            f.write(bill.billNum + "," + bill.billName+ "," + bill.billUrl + ",")
+            # try:
+            bai = billAcceptInfo.objects.filter(bill=bill)[0]
+            f.write(bai.process + "," + bai.proposeDate + "," + bai.proposer + ",")
+            # except:
+                # f.write(",,,")
+            try:
+                jji = JurisJudgeInfo.objects.filter(bill=bill)[0]
+                f.write(jji.committee + "," + jji.sendingDate + "," + jji.introDate + "," + jji.disposeDate + "," +jji.disposeResult + ",")
+            except:
+                f.write(",,,,,")
+            try:
+                jci = JurisConfInfo.objects.filter(bill=bill)[0]
+                f.write(jci.confName + "," + jci.confDate + "," + jci.confResult + ",")
+            except:
+                f.write(",,,")
+            try:
+                rji = RelJudgeInfo.objects.filter(bill=bill)[0]
+                f.write(rji.relName + "," + rji.sendingDate + "," + rji.introDate + "," + rji.proposeDate + ",")
+            except:
+                f.write(",,,,")
+            try:
+                lji = LegisJudgeInfo.objects.filter(bill=bill)[0]
+                f.write(lji.sendingDate + "," + lji.introDate + "," + lji.disposeDate + "," + lji.disposeResult + ",")
+            except:
+                f.write(",,,,")
+            try:
+                lci = LegisConfInfo.objects.filter(bill=bill)[0]
+                f.write(lci.confName + "," + lci.confDate + "," + lci.confResult + ",")
+            except:
+                f.write(",,,")
+            try:
+                mci = MainConfInfo.objects.filter(bill=bill)[0]
+                f.write(mci.introDate + "," + mci.decisionDate + "," + mci.confName + "," + mci.confResult + ",")
+            except:
+                f.write(",,,,")
+            try:
+                ti = TransferInfo.objects.filter(bill=bill)[0]
+                f.write(ti.transferDate + ",")
+            except:
+                f.write(",")
+            try:                
+                pi = ProclaimInfo.objects.filter(bill=bill)[0]
+                f.write(pi.proclaimDate + "," + pi.proclaimNum + "," + pi.proclaimLaw + ",")
+            except:
+                f.write(",,,")
+            try:
+                ais = AdditionalInfo.objects.filter(bill=bill)
+                for ai in ais:
+                    if ai.type == 1:
+                        f.write("대안")
+                    elif ai.type == 2:
+                        f.write("비고")
+                    elif ai.type == 3:
+                        f.write("타법정보")
+                    f.write(ai.content)
+            except:
+                f.write("")
+            f.write("\n")
 
     return TemplateResponse(request, 'index.html', context)
 
@@ -37,7 +128,7 @@ def bill_url_collector(agefrom, ageto, pagesize, maxpage):
         for tr in trs[1:]:
             tds = tr.findAll('td')
             link = tds[1].find('a').get('href')
-            name = tds[1].text
+            name = tds[1].text.strip().replace(",", ".")
             num = tds[0].text
             link = front_url + link.replace('javascript:fGoDetail(\'', '').replace('\', \'\')', '')
             try:
@@ -54,6 +145,7 @@ def bill_detail(info):
     r.headers.update({'referer': 'http://likms.assembly.go.kr/bill/BillSearchResult.do'})
 
     data = r.get(info.billUrl)
+    print(info.billNum)
     data = data.text.encode(data.encoding)
     data = bs4.BeautifulSoup(data)
 
@@ -76,7 +168,9 @@ def bill_detail(info):
             tr = tbody.find("tr")
             tds = tr.findAll("td")
         except:
-            if not cont.find("div", attrs={"class": "TEXTTYPE02"}):
+            try:
+                cont.find("div", attrs={"class": "TEXTTYPE02"})
+            except:
                 continue
 
         for type in titles:
@@ -93,7 +187,7 @@ def bill_detail(info):
                 )
                 # print("의안접수")
             elif type == "소관위 심사정보":
-                committee = tds[0].text.strip()
+                committee = tds[0].text.strip().replace(",", ".")
                 sendingDate = tds[1].text.strip()
                 introDate = tds[2].text.strip()
                 disposeDate = tds[3].text.strip()
