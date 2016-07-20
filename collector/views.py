@@ -43,65 +43,65 @@ def list_collector(request):
     # return
     context = {'bills': bills}
 
-    with open("19th.txt", "w") as f:
+    with open("19th.csv", "w") as f:
         for bill in bills:
             print(bill.billName)
             f.write(bill.billNum + "," + bill.billName+ "," + bill.billUrl + ",")
-            # try:
-            bai = billAcceptInfo.objects.filter(bill=bill)[0]
-            f.write(bai.process + "," + bai.proposeDate + "," + bai.proposer + ",")
-            # except:
-                # f.write(",,,")
+            try:
+                bai = billAcceptInfo.objects.filter(bill=bill)[0]
+                f.write(bai.process + "," + bai.proposeDate.strftime("%Y-%m-%d") + "," + bai.proposer + ",")
+            except:
+                f.write(",,,")
             try:
                 jji = JurisJudgeInfo.objects.filter(bill=bill)[0]
-                f.write(jji.committee + "," + jji.sendingDate + "," + jji.introDate + "," + jji.disposeDate + "," +jji.disposeResult + ",")
+                f.write(jji.committee + "," + jji.sendingDate.strftime("%Y-%m-%d") + "," + jji.introDate.strftime("%Y-%m-%d") + "," + jji.disposeDate.strftime("%Y-%m-%d") + "," +jji.disposeResult + ",")
             except:
                 f.write(",,,,,")
             try:
                 jci = JurisConfInfo.objects.filter(bill=bill)[0]
-                f.write(jci.confName + "," + jci.confDate + "," + jci.confResult + ",")
+                f.write(jci.confName + "," + jci.confDate.strftime("%Y-%m-%d") + "," + jci.confResult + ",")
             except:
                 f.write(",,,")
             try:
                 rji = RelJudgeInfo.objects.filter(bill=bill)[0]
-                f.write(rji.relName + "," + rji.sendingDate + "," + rji.introDate + "," + rji.proposeDate + ",")
+                f.write(rji.relName + "," + rji.sendingDate.strftime("%Y-%m-%d") + "," + rji.introDate.strftime("%Y-%m-%d") + "," + rji.proposeDate.strftime("%Y-%m-%d") + ",")
             except:
                 f.write(",,,,")
             try:
                 lji = LegisJudgeInfo.objects.filter(bill=bill)[0]
-                f.write(lji.sendingDate + "," + lji.introDate + "," + lji.disposeDate + "," + lji.disposeResult + ",")
+                f.write(lji.sendingDate.strftime("%Y-%m-%d") + "," + lji.introDate.strftime("%Y-%m-%d") + "," + lji.disposeDate.strftime("%Y-%m-%d") + "," + lji.disposeResult + ",")
             except:
                 f.write(",,,,")
             try:
                 lci = LegisConfInfo.objects.filter(bill=bill)[0]
-                f.write(lci.confName + "," + lci.confDate + "," + lci.confResult + ",")
+                f.write(lci.confName + "," + lci.confDate.strftime("%Y-%m-%d") + "," + lci.confResult + ",")
             except:
                 f.write(",,,")
             try:
                 mci = MainConfInfo.objects.filter(bill=bill)[0]
-                f.write(mci.introDate + "," + mci.decisionDate + "," + mci.confName + "," + mci.confResult + ",")
+                f.write(mci.introDate.strftime("%Y-%m-%d") + "," + mci.decisionDate.strftime("%Y-%m-%d") + "," + mci.confName + "," + mci.confResult + ",")
             except:
                 f.write(",,,,")
             try:
                 ti = TransferInfo.objects.filter(bill=bill)[0]
-                f.write(ti.transferDate + ",")
+                f.write(ti.transferDate.strftime("%Y-%m-%d") + ",")
             except:
                 f.write(",")
             try:                
                 pi = ProclaimInfo.objects.filter(bill=bill)[0]
-                f.write(pi.proclaimDate + "," + pi.proclaimNum + "," + pi.proclaimLaw + ",")
+                f.write(pi.proclaimDate.strftime("%Y-%m-%d") + "," + pi.proclaimNum + "," + pi.proclaimLaw + ",")
             except:
                 f.write(",,,")
             try:
                 ais = AdditionalInfo.objects.filter(bill=bill)
                 for ai in ais:
                     if ai.type == 1:
-                        f.write("대안")
+                        f.write("대안:")
                     elif ai.type == 2:
-                        f.write("비고")
+                        f.write("비고:")
                     elif ai.type == 3:
-                        f.write("타법정보")
-                    f.write(ai.content)
+                        f.write("타법정보:")
+                    f.write(ai.content.strip().replace("\t", "").replace("\n", ""))
             except:
                 f.write("")
             f.write("\n")
